@@ -1,5 +1,4 @@
-<!-- Подключение DOMPurify -->
-<script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.5/dist/purify.min.js"></script>
+<!-- Sanitize helper functions (no external libraries required) -->
 
 <!-- Кнопка открытия чата -->
 <button id="open-chat" style="
@@ -333,11 +332,23 @@
     }
 
     function sanitizeHTML(html) {
-      return DOMPurify.sanitize(html, {
-        ALLOWED_TAGS: ['b','strong','i','em','br','a','div','img'],
-        ALLOWED_ATTR: ['href','target','rel','src','alt','class','style'],
-        FORCE_BODY: true
+      const ALLOWED_TAGS  = ['b','strong','i','em','br','a','div','img'];
+      const ALLOWED_ATTRS = ['href','target','rel','src','alt','class','style'];
+      const tmp = document.createElement('div');
+      tmp.innerHTML = html;
+      tmp.querySelectorAll('*').forEach(el => {
+        const tag = el.tagName.toLowerCase();
+        if (!ALLOWED_TAGS.includes(tag)) {
+          el.replaceWith(...el.childNodes);
+          return;
+        }
+        [...el.attributes].forEach(attr => {
+          if (!ALLOWED_ATTRS.includes(attr.name.toLowerCase())) {
+            el.removeAttribute(attr.name);
+          }
+        });
       });
+      return tmp.innerHTML;
     }
 
     function addMessage(sender, html) {
